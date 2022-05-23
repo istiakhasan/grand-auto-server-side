@@ -24,6 +24,7 @@ const run=async()=>{
         await  client.connect()
         const toolsCollections=client.db('grand_auto').collection('tools')
         const orderCollections=client.db('grand_auto').collection('order')
+        const reviewCollections=client.db('grand_auto').collection('review')
         //payment intent 
         app.post('/create-payment-intent', async(req, res) =>{
             const service = req.body;
@@ -74,6 +75,21 @@ const run=async()=>{
             const result=await orderCollections.insertOne(book) 
             res.send(result)
 
+        });
+        //update order after pay
+        app.patch('/order/:id',async(req,res)=>{
+          const id=req.params.id
+          const paymentData=req.body
+          const query={_id:ObjectId(id)}
+          console.log(id,paymentData,"nope")
+          const update={
+              $set:{
+                transectionId:paymentData.transectionId,
+                pay:true 
+              }
+          }
+          const result=await orderCollections.updateOne(query,update)
+          res.send(result)
         })
         app.get('/order',async(req,res)=>{
             const email=req.query.email 
@@ -106,6 +122,16 @@ const run=async()=>{
             })
             res.send(tools)
           
+        })
+        //customer review
+        app.post('/review',async(req,res)=>{
+            const review=req.body
+            const result=await reviewCollections.insertOne(review)
+            res.send(result)
+        })
+        app.get('/review',async(req,res)=>{
+            const reviews=await reviewCollections.find().toArray()
+            res.send(reviews)
         })
        
 
