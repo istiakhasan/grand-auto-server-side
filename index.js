@@ -246,8 +246,20 @@ const run = async () => {
     app.get('/admin',async(req,res)=>{
       const email=req.query.email 
       const getUser=await userCollections.findOne({email:email})
-      const isAdmin=getUser.role==='admin'
-      res.send({admin:isAdmin})
+      if(getUser){
+
+        const isAdmin=getUser.role==='admin'
+      return  res.send({admin:isAdmin})
+      }else{
+      return  res.send({admin:false})
+      }
+    })
+
+    //add product to product collection 
+    app.post('/addproduct',async(req,res)=>{
+      const product=req.body
+      const result=await toolsCollections.insertOne(product) 
+      res.send(result)
     })
     
   } finally {
