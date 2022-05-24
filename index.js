@@ -5,6 +5,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 app.use(cors());
 require("dotenv").config();
 app.use(express.json());
+var jwt = require('jsonwebtoken');
 const stripe = require("stripe")(process.env.STRIPE_SECRET);
 const port = process.env.PORT || 4000;
 
@@ -19,12 +20,44 @@ const client = new MongoClient(uri, {
   serverApi: ServerApiVersion.v1,
 });
 
+
+//jot token verification 
+function verifyJWT(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).send({ message: 'UnAuthorized access' });
+  }
+  const token = authHeader.split(' ')[1];
+  jwt.verify(token, process.env.TOKEN_SECRET, function (err, decoded) {
+    if (err) {
+      return res.status(403).send({ message: 'Forbidden access' })
+    }
+    console.log(decoded)
+    req.decoded = decoded;
+    next();
+  });
+}
+
 const run = async () => {
   try {
     await client.connect();
     const toolsCollections = client.db("grand_auto").collection("tools");
     const orderCollections = client.db("grand_auto").collection("order");
     const reviewCollections = client.db("grand_auto").collection("review");
+    const userCollections = client.db("grand_auto").collection("users");
+
+    //admin check 
+    const verifyAdmin = async (req, res, next) => {
+      const requester = req.decoded.email;
+      const requesterAccount = await userCollections.findOne({ email: requester });
+      if (requesterAccount.role === 'admin') {
+        next();
+      }
+      else {
+        res.status(403).send({ message: 'forbidden' });
+      }
+    }
+
     const profileDetailsCollections = client
       .db("grand_auto")
       .collection("profile");
@@ -83,7 +116,7 @@ const run = async () => {
       const id = req.params.id;
       const paymentData = req.body;
       const query = { _id: ObjectId(id) };
-      console.log(id, paymentData, "nope");
+      
       const update = {
         $set: {
           transectionId: paymentData.transectionId,
@@ -93,7 +126,7 @@ const run = async () => {
       const result = await orderCollections.updateOne(query, update);
       res.send(result);
     });
-    app.get("/order", async (req, res) => {
+    app.get("/order",verifyJWT, async (req, res) => {
       const email = req.query.email;
       const query = { email: email };
       const result = await orderCollections.find(query).toArray();
@@ -167,10 +200,56 @@ const run = async () => {
     //load my profile information 
     app.get('/profile-details/',async(req,res)=>{
         const email=req.query.email 
-        console.log(email,"ashche")
+       
         const result=await profileDetailsCollections.findOne({email:email})
+        if(!result){
+            res.send({find:false})
+            return
+        }else{
+
+            res.send(result)
+        }
+    })
+    //store user information 
+    app.put('/user/:email', async (req, res) => {
+      const email = req.params.email;
+      const user = req.body;
+      console.log(user)
+      console.log(email,user)
+      const filter = { email: email };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: user,
+      };
+      const token = jwt.sign({ email: email }, process.env.TOKEN_SECRET, { expiresIn: '7d' })
+      const result = await userCollections.updateOne(filter, updateDoc, options);
+      res.send({token });
+     
+    });
+
+    //get all users 
+     app.get('/user', async (req, res) => {
+      const users = await userCollections.find().toArray();
+      res.send(users);
+    });
+    //make admin 
+    app.put('/makeadmin/:email',async(req,res)=>{
+        const email=req.params.email 
+        const filter={email:email}
+        const updateDoc={
+          $set:{role:'admin'}
+        };
+        const result=await userCollections.updateOne(filter,updateDoc)
         res.send(result)
     })
+    //check if admin 
+    app.get('/admin',async(req,res)=>{
+      const email=req.query.email 
+      const getUser=await userCollections.findOne({email:email})
+      const isAdmin=getUser.role==='admin'
+      res.send({admin:isAdmin})
+    })
+    
   } finally {
   }
 };
