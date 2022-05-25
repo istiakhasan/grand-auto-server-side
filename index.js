@@ -147,6 +147,21 @@ const run = async () => {
       const orders=await orderCollections.find({}).toArray()
       res.send(orders)
     })
+    //change order status 
+    app.patch('/updatestatus/:id',async(req,res)=>{
+      const id=req.params.id 
+      const query={_id:ObjectId(id)}
+      const updateStatus = {
+        $set: {
+          status:"Paid"
+        }
+      }
+
+
+      const result=await orderCollections.updateOne(query,updateStatus)
+      res.send(result)
+
+    })
     //available order
     app.get("/availabletools", async (req, res) => {
       const tools = await toolsCollections.find().toArray();
