@@ -240,6 +240,13 @@ const run = async () => {
       const users = await userCollections.find().toArray();
       res.send(users);
     });
+    //delete user 
+    app.delete('/user',verifyJWT,verifyAdmin,async(req,res)=>{
+      const email=req.query.email 
+      const deleteUser=await userCollections.deleteOne({email:email})
+      res.send(deleteUser)
+     
+    })
     //make admin 
     app.put('/makeadmin/:email',verifyJWT,verifyAdmin,async(req,res)=>{
         const email=req.params.email 
