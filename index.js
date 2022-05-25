@@ -176,7 +176,7 @@ const run = async () => {
     });
 
     //my profile details
-    app.put("/profile-details/:email", async (req, res) => {
+    app.put("/profile-details/:email",verifyJWT, async (req, res) => {
    
     const email = req.params.email;
     const user = req.body;
@@ -201,7 +201,7 @@ const run = async () => {
     });
 
     //load my profile information 
-    app.get('/profile-details/',async(req,res)=>{
+    app.get('/profile-details/',verifyJWT,async(req,res)=>{
         const email=req.query.email 
        
         const result=await profileDetailsCollections.findOne({email:email})
