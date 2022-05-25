@@ -33,6 +33,7 @@ function verifyJWT(req, res, next) {
       return res.status(403).send({ message: 'Forbidden access' })
     }
     req.decoded = decoded;
+    console.log(decoded)
     next();
   });
 }
@@ -48,8 +49,9 @@ const run = async () => {
     //admin check 
     const verifyAdmin = async (req, res, next) => {
       const requester = req.decoded.email;
+      console.log(requester,"email get ")
       const requesterAccount = await userCollections.findOne({ email: requester });
-      if (requesterAccount.role === 'admin') {
+      if (requesterAccount.role ==='admin') {
         next();
       }
       else {
@@ -83,26 +85,7 @@ const run = async () => {
       const result = await toolsCollections.findOne({ _id: ObjectId(id) });
 
       res.send(result);
-      // console.log(result,"two")
-      // // const tools=await toolsCollections.find().toArray()
-      //  const order=await orderCollections.find().toArray()
-      //  order.forEach(item=>{
-
-      //      const toolsOrder=order.filter(items=>items._id==ObjectId(id))
-      //      console.log(toolsOrder,"got it")
-
-      //  })
-      // // tools.forEach(tool=>{
-      // //     const toolsOrdered=order.filter(items=>items.toolsName===tool.name)
-      // //     const orderQuantity=toolsOrdered.map(item=>item.orderQuantity)
-
-      // //     const updateQuantity=orderQuantity.reduce((prev,current)=>prev+current,0)
-
-      // //     tool.available_quantity -= updateQuantity
-      // // })
-
-      // // const singleItems=tools.find(item=>parseInt(item._id)===parseInt(id))
-      // // res.send(singleItems)
+    
     });
     //book order
     app.post("/order", async (req, res) => {
@@ -153,7 +136,7 @@ const run = async () => {
       const query={_id:ObjectId(id)}
       const updateStatus = {
         $set: {
-          status:"Paid"
+          status:"shift"
         }
       }
 
@@ -163,24 +146,24 @@ const run = async () => {
 
     })
     //available order
-    app.get("/availabletools", async (req, res) => {
-      const tools = await toolsCollections.find().toArray();
-      const order = await orderCollections.find().toArray();
-      tools.forEach((tool) => {
-        const toolsOrdered = order.filter(
-          (items) => items.toolsName === tool.name
-        );
-        const orderQuantity = toolsOrdered.map((item) => item.orderQuantity);
+    // app.get("/availabletools", async (req, res) => {
+    //   const tools = await toolsCollections.find().toArray();
+    //   const order = await orderCollections.find().toArray();
+    //   tools.forEach((tool) => {
+    //     const toolsOrdered = order.filter(
+    //       (items) => items.toolsName === tool.name
+    //     );
+    //     const orderQuantity = toolsOrdered.map((item) => item.orderQuantity);
 
-        const updateQuantity = orderQuantity.reduce(
-          (prev, current) => prev + current,
-          0
-        );
+    //     const updateQuantity = orderQuantity.reduce(
+    //       (prev, current) => prev + current,
+    //       0
+    //     );
 
-        tool.available_quantity -= updateQuantity;
-      });
-      res.send(tools);
-    });
+    //     tool.available_quantity -= updateQuantity;
+    //   });
+    //   res.send(tools);
+    // });
     //customer review
     app.post("/review", async (req, res) => {
       const review = req.body;
@@ -252,7 +235,7 @@ const run = async () => {
       res.send(users);
     });
     //make admin 
-    app.put('/makeadmin/:email',async(req,res)=>{
+    app.put('/makeadmin/:email',verifyJWT,verifyAdmin,async(req,res)=>{
         const email=req.params.email 
         const filter={email:email}
         const updateDoc={
@@ -275,7 +258,7 @@ const run = async () => {
     })
 
     //add product to product collection 
-    app.post('/addproduct',async(req,res)=>{
+    app.post('/addproduct',verifyJWT,verifyAdmin,async(req,res)=>{
       const product=req.body
       const result=await toolsCollections.insertOne(product) 
       res.send(result)
