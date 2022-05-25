@@ -120,6 +120,7 @@ const run = async () => {
         $set: {
           transectionId: paymentData.transectionId,
           pay: true,
+          status:"pending"
         },
       };
       const result = await orderCollections.updateOne(query, update);
