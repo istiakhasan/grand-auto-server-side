@@ -32,7 +32,6 @@ function verifyJWT(req, res, next) {
     if (err) {
       return res.status(403).send({ message: 'Forbidden access' })
     }
-    console.log(decoded)
     req.decoded = decoded;
     next();
   });
@@ -142,6 +141,11 @@ const run = async () => {
       const result = await orderCollections.deleteOne({ _id: ObjectId(id) });
       res.send(result);
     });
+    //load all orders for admin 
+    app.get('/allorders',verifyJWT,verifyAdmin ,async(req,res)=>{
+      const orders=await orderCollections.find({}).toArray()
+      res.send(orders)
+    })
     //available order
     app.get("/availabletools", async (req, res) => {
       const tools = await toolsCollections.find().toArray();
@@ -214,8 +218,7 @@ const run = async () => {
     app.put('/user/:email', async (req, res) => {
       const email = req.params.email;
       const user = req.body;
-      console.log(user)
-      console.log(email,user)
+     
       const filter = { email: email };
       const options = { upsert: true };
       const updateDoc = {
