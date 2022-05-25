@@ -87,6 +87,12 @@ const run = async () => {
       res.send(result);
     
     });
+    //delete tools or delete product 
+    app.delete("/tools/:id",verifyJWT,verifyAdmin,async(req,res)=>{
+      const id=req.params.id 
+      const result=await toolsCollections.deleteOne({_id:ObjectId(id)})
+      res.send(result)
+    })
     //book order
     app.post("/order",verifyJWT, async (req, res) => {
       const book = req.body;
@@ -170,7 +176,7 @@ const run = async () => {
       const result = await reviewCollections.insertOne(review);
       res.send(result);
     });
-    app.get("/review",verifyJWT, async (req, res) => {
+    app.get("/review", async (req, res) => {
       const reviews = await reviewCollections.find().toArray();
       res.send(reviews);
     });
