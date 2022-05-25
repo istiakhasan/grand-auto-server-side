@@ -33,7 +33,6 @@ function verifyJWT(req, res, next) {
       return res.status(403).send({ message: 'Forbidden access' })
     }
     req.decoded = decoded;
-    console.log(decoded)
     next();
   });
 }
@@ -50,7 +49,6 @@ const run = async () => {
     //admin check 
     const verifyAdmin = async (req, res, next) => {
       const requester = req.decoded.email;
-      console.log(requester,"email get ")
       const requesterAccount = await userCollections.findOne({ email: requester });
       if (requesterAccount.role ==='admin') {
         next();
