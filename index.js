@@ -63,7 +63,7 @@ const run = async () => {
       .db("grand_auto")
       .collection("profile");
     //payment intent
-    app.post("/create-payment-intent", async (req, res) => {
+    app.post("/create-payment-intent",verifyJWT, async (req, res) => {
       const service = req.body;
       const price = service.totalPrice;
       const amount = price * 100;
@@ -88,13 +88,13 @@ const run = async () => {
     
     });
     //book order
-    app.post("/order", async (req, res) => {
+    app.post("/order",verifyJWT, async (req, res) => {
       const book = req.body;
       const result = await orderCollections.insertOne(book);
       res.send(result);
     });
     //update order after pay
-    app.patch("/order/:id", async (req, res) => {
+    app.patch("/order/:id",verifyJWT, async (req, res) => {
       const id = req.params.id;
       const paymentData = req.body;
       const query = { _id: ObjectId(id) };
@@ -115,12 +115,12 @@ const run = async () => {
       const result = await orderCollections.find(query).toArray();
       res.send(result);
     });
-    app.get("/order/:id", async (req, res) => {
+    app.get("/order/:id",verifyJWT, async (req, res) => {
       const id = req.params.id;
       const result = await orderCollections.findOne({ _id: ObjectId(id) });
       res.send(result);
     });
-    app.delete("/order/:id", async (req, res) => {
+    app.delete("/order/:id",verifyJWT, async (req, res) => {
       const id = req.params.id;
       const result = await orderCollections.deleteOne({ _id: ObjectId(id) });
       res.send(result);
@@ -170,7 +170,7 @@ const run = async () => {
       const result = await reviewCollections.insertOne(review);
       res.send(result);
     });
-    app.get("/review", async (req, res) => {
+    app.get("/review",verifyJWT, async (req, res) => {
       const reviews = await reviewCollections.find().toArray();
       res.send(reviews);
     });
@@ -230,7 +230,7 @@ const run = async () => {
     });
 
     //get all users 
-     app.get('/user', async (req, res) => {
+     app.get('/user',verifyJWT,verifyAdmin, async (req, res) => {
       const users = await userCollections.find().toArray();
       res.send(users);
     });
