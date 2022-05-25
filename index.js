@@ -45,6 +45,7 @@ const run = async () => {
     const orderCollections = client.db("grand_auto").collection("order");
     const reviewCollections = client.db("grand_auto").collection("review");
     const userCollections = client.db("grand_auto").collection("users");
+    const messageCollections = client.db("grand_auto").collection("message");
 
     //admin check 
     const verifyAdmin = async (req, res, next) => {
@@ -275,6 +276,14 @@ const run = async () => {
       const product=req.body
       const result=await toolsCollections.insertOne(product) 
       res.send(result)
+    })
+
+    //send message api 
+    app.post('/sendmessage',async(req,res)=>{
+      const message=req.body 
+      const result=await messageCollections.insertOne(message)
+      res.send(result)
+
     })
     
   } finally {
