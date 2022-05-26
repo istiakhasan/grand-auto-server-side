@@ -9,10 +9,11 @@ var jwt = require("jsonwebtoken");
 const stripe = require("stripe")(process.env.STRIPE_SECRET);
 const port = process.env.PORT || 4000;
 
+
+
 app.get("/", (req, res) => {
   res.send("Welcome to Grand Auto");
 });
-
 const uri = `mongodb+srv://${process.env.DB_NAME}:${process.env.DB_PASS}@cluster0.nel7s.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
@@ -58,9 +59,7 @@ const run = async () => {
       }
     };
 
-    const profileDetailsCollections = client
-      .db("grand_auto")
-      .collection("profile");
+    const profileDetailsCollections = client.db("grand_auto").collection("profile");
     //payment intent
     app.post("/create-payment-intent", verifyJWT, async (req, res) => {
       const service = req.body;
@@ -73,12 +72,12 @@ const run = async () => {
       });
       res.send({ clientSecret: paymentIntent.client_secret });
     });
-
+   //load all products 
     app.get("/tools", async (req, res) => {
       const result = await toolsCollections.find().toArray();
       res.send(result);
     });
-
+    //load single product 
     app.get("/tools/:id", async (req, res) => {
       const id = req.params.id;
       const result = await toolsCollections.findOne({ _id: ObjectId(id) });
@@ -102,7 +101,6 @@ const run = async () => {
       const id = req.params.id;
       const paymentData = req.body;
       const query = { _id: ObjectId(id) };
-
       const update = {
         $set: {
           transectionId: paymentData.transectionId,
@@ -143,30 +141,10 @@ const run = async () => {
           status: "shift",
         },
       };
-
       const result = await orderCollections.updateOne(query, updateStatus);
       res.send(result);
     });
-    //available order
-    // app.get("/availabletools", async (req, res) => {
-    //   const tools = await toolsCollections.find().toArray();
-    //   const order = await orderCollections.find().toArray();
-    //   tools.forEach((tool) => {
-    //     const toolsOrdered = order.filter(
-    //       (items) => items.toolsName === tool.name
-    //     );
-    //     const orderQuantity = toolsOrdered.map((item) => item.orderQuantity);
-
-    //     const updateQuantity = orderQuantity.reduce(
-    //       (prev, current) => prev + current,
-    //       0
-    //     );
-
-    //     tool.available_quantity -= updateQuantity;
-    //   });
-    //   res.send(tools);
-    // });
-    //customer review
+ 
     app.post("/review", async (req, res) => {
       const review = req.body;
       const result = await reviewCollections.insertOne(review);
@@ -220,7 +198,6 @@ const run = async () => {
     app.put("/user/:email", async (req, res) => {
       const email = req.params.email;
       const user = req.body;
-
       const filter = { email: email };
       const options = { upsert: true };
       const updateDoc = {
